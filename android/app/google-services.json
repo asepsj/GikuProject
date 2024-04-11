@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "958799076376",
+    "project_id": "giku-e3900",
+    "storage_bucket": "giku-e3900.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:958799076376:android:155dfae99d82a4ac0e376d",
+        "android_client_info": {
+          "package_name": "com.example.giku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBALXbyFJT-kvA8hzStUCcd9qifq6rqZEI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
