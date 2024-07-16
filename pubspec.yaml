@@ -28,12 +28,30 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  animations: ^2.0.11
+  awesome_notifications: ^0.8.2
+  easy_stepper: ^0.8.5
+  expandable_text: ^2.3.0
   firebase_auth: ^4.17.8
   firebase_core: ^2.27.0
+  firebase_database: ^10.4.9
+  firebase_messaging: ^14.7.19
   flutter:
     sdk: flutter
+  flutter_native_splash: ^2.3.10
+  flutter_spinkit: ^5.2.1
   material_design_icons_flutter: ^7.0.7296
+  shared_preferences: ^2.2.3
 
+flutter_native_splash:
+  color: "#62CDff" 
+  image: assets/logo.png
+  android_12: 
+    image: assets/logo.png
+    color: "#62CDff"
+  android: true
+  ios: false
+  web: false
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -65,6 +83,7 @@ flutter:
   assets:
   - assets/
   - assets/other/
+  - assets/allert/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -82,7 +101,7 @@ flutter:
   fonts:
     - family: Poppins
       fonts:
-          - asset: fonts/Poppins-Regular.ttf
+          - asset: assets/fonts/Poppins-Regular.ttf
   #       - asset: fonts/Schyler-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
