@@ -8,7 +8,7 @@ import 'package:giku/app/views/pages/auth/login_views.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final databaseReference = FirebaseDatabase.instance.reference();
+  final databaseReference = FirebaseDatabase.instance.ref();
   final _firebaseMessaging = FirebaseMessaging.instance;
 
   void addUser(
@@ -18,11 +18,11 @@ class AuthService {
     String phoneNumber,
     String? token,
   ) {
-    databaseReference.child("users/$userId").set(
+    databaseReference.child("pasiens/$userId").set(
       {
-        'name': fullName,
+        'displayName': fullName,
         'email': email,
-        'phone': phoneNumber,
+        'phoneNumber': phoneNumber,
         'fcm_token': token,
         'role': 'pasien',
         'createdAt': DateTime.now().toIso8601String(),
@@ -97,7 +97,7 @@ class AuthService {
           MaterialPageRoute(builder: (context) => MainPage()),
           (Route<dynamic> route) => false,
         );
-        databaseReference.child("users/${userCredential.user!.uid}").update({
+        databaseReference.child("pasiens/${userCredential.user!.uid}").update({
           'fcm_token': token,
         });
       }

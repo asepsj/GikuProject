@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:giku/app/services/antrian/antrian_services.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class ButtonDateView extends StatefulWidget {
   final Function(DateTime) onDateSelected;
@@ -19,25 +21,43 @@ class ButtonDateView extends StatefulWidget {
 class _ButtonDateViewState extends State<ButtonDateView> {
   int _currentIndex = 0;
   List<bool> _isQueueFull = List.filled(7, false);
-
   final AntrianService _antrianService = AntrianService();
+  DatabaseReference? _queueRef;
+  late StreamSubscription<DatabaseEvent>? _queueListener;
 
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('id_ID', null);
     _checkQueues();
+    _addQueueListener();
   }
 
   Future<void> _checkQueues() async {
     DateTime currentDate = DateTime.now();
     for (int i = 0; i < 7; i++) {
       DateTime date = currentDate.add(Duration(days: i));
-      bool isFull = await _antrianService.isQueueFull(widget.doctor, date);
-      setState(() {
-        _isQueueFull[i] = isFull;
-      });
+      bool isFull =
+          await _antrianService.isQueueFull(widget.doctor['key'], date);
+      if (mounted) {
+        setState(() {
+          _isQueueFull[i] = isFull;
+        });
+      }
     }
+  }
+
+  void _addQueueListener() {
+    _queueRef = FirebaseDatabase.instance.ref().child('antrians');
+    _queueListener = _queueRef?.onValue.listen((event) {
+      _checkQueues();
+    });
+  }
+
+  @override
+  void dispose() {
+    _queueListener?.cancel();
+    super.dispose();
   }
 
   @override
@@ -68,9 +88,11 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                       Text(
                         formattedDate,
                         style: TextStyle(
-                          color: _currentIndex == index
+                          color: _isQueueFull[index]
                               ? Colors.white
-                              : Colors.black,
+                              : _currentIndex == index
+                                  ? Colors.white
+                                  : Colors.black,
                           fontSize: w * 0.045,
                           fontWeight: FontWeight.bold,
                         ),
@@ -78,9 +100,11 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                       Text(
                         formattedDay,
                         style: TextStyle(
-                          color: _currentIndex == index
+                          color: _isQueueFull[index]
                               ? Colors.white
-                              : Colors.black.withOpacity(0.4),
+                              : _currentIndex == index
+                                  ? Colors.white
+                                  : Colors.black.withOpacity(0.4),
                           fontSize: w * 0.04,
                           fontWeight: FontWeight.normal,
                         ),
@@ -104,7 +128,7 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                     ),
                     backgroundColor: MaterialStateProperty.resolveWith<Color>(
                       (Set<MaterialState> states) {
-                        if (_isQueueFull[index]) return Colors.red;
+                        if (_isQueueFull[index]) return CustomTheme.greyColor;
                         if (_currentIndex == index)
                           return CustomTheme.blueColor1;
                         return Colors.white;

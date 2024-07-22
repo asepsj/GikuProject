@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:giku/app/services/antrian/antrian_services.dart';
 import 'package:giku/app/views/alert/we_alert.dart';
@@ -19,30 +21,65 @@ class _AddScheduleViewState extends State<AddScheduleView> {
   DateTime? selectedDate = DateTime.now();
   int? nomorAntrian;
   final AntrianService antrianService = AntrianService();
+  late StreamSubscription<DatabaseEvent>? _queueListener;
   String? userid;
+  String? userName;
+  List<bool> isQueueTaken = List.filled(5, false);
+  bool isQueueFull = false;
 
   @override
   void initState() {
     super.initState();
-    FirebaseAuth.instance.idTokenChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-      } else {
-        print('User is signed in!');
-        print(user.uid);
-        if (mounted) {
-          setState(() {
-            userid = user.uid;
-          });
-        }
+    setState(() {
+      userid = FirebaseAuth.instance.currentUser!.uid;
+      userName = FirebaseAuth.instance.currentUser!.displayName;
+    });
+    _addQueueListener();
+    _checkQueueNumbers();
+  }
+
+  Future<void> _checkQueueNumbers() async {
+    if (selectedDate != null && widget.doctor['key'] != null) {
+      List<bool> queueStatus = await antrianService.checkQueueNumbers(
+          selectedDate!, widget.doctor['key']);
+      if (mounted) {
+        setState(() {
+          isQueueTaken = queueStatus;
+          isQueueFull = !queueStatus.contains(false);
+        });
       }
+    }
+  }
+
+  void _addQueueListener() {
+    DatabaseReference queueRef =
+        FirebaseDatabase.instance.ref().child('antrians');
+    _queueListener = queueRef.onValue.listen((event) {
+      _checkQueueNumbers();
     });
   }
 
   void addSchedule() async {
     if (selectedDate != null && nomorAntrian != null) {
-      await antrianService.tambahAntrian(
-          context, widget.doctor, selectedDate!, nomorAntrian!, userid!);
+      bool isQueueAvailable = !isQueueTaken[nomorAntrian! - 1];
+
+      if (isQueueAvailable) {
+        await antrianService.tambahAntrian(
+          context,
+          widget.doctor,
+          selectedDate!,
+          nomorAntrian!,
+          userid!,
+          userName!,
+          widget.doctor['displayName'],
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nomor antrian sudah terpakai atau dibatalkan.'),
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -58,6 +95,12 @@ class _AddScheduleViewState extends State<AddScheduleView> {
         nomorAntrian = nomor;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _queueListener?.cancel();
+    super.dispose();
   }
 
   @override
@@ -186,6 +229,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                         selectedDate = date;
                         nomorAntrian = null;
                       });
+                      _checkQueueNumbers();
                     }
                   },
                 ),
@@ -200,13 +244,28 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                   ),
                 ),
               ),
-              Center(
-                child: NomorAntrianView(
-                  onNomorAntrianChanged: _onNomorAntrianChanged,
-                  doctor: widget.doctor,
-                  date: selectedDate!,
-                ),
-              ),
+              isQueueFull
+                  ? Center(
+                      child: Container(
+                        width: w * 0.7,
+                        padding: EdgeInsets.only(top: w * 0.05),
+                        child: Text(
+                          'Pada tanggal dan hari ini nomor antrian sudah penuh, Silahkan pilih tanggal lain.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: w * 0.045,
+                            color: CustomTheme.blueColor1,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: NomorAntrianView(
+                        onNomorAntrianChanged: _onNomorAntrianChanged,
+                        isQueueTaken: isQueueTaken,
+                      ),
+                    ),
               Container(
                 alignment: Alignment.bottomCenter,
                 padding: EdgeInsets.only(bottom: w * 0.05, top: w * 0.1),

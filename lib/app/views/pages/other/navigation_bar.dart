@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:giku/app/views/pages/home/home.dart';
-import 'package:giku/app/views/pages/profile/myprofile.dart';
+import 'package:giku/app/views/pages/profile/my_profile/my_profile.dart';
 import 'package:giku/app/views/pages/schedule/my_shedule/my_schedule.dart';
 import 'package:giku/app/views/pages/notification/notification.dart';
 
