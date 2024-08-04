@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/antrian/antrian_services.dart';
+import 'package:giku/app/services/antrian/add_antrian.dart';
+import 'package:giku/app/services/antrian/full_antrian.dart';
+import 'package:giku/app/services/antrian/jadwal_libur_antrian.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -21,7 +23,10 @@ class ButtonDateView extends StatefulWidget {
 class _ButtonDateViewState extends State<ButtonDateView> {
   int _currentIndex = 0;
   List<bool> _isQueueFull = List.filled(7, false);
-  final AntrianService _antrianService = AntrianService();
+  List<bool> _isDoctorHoliday = List.filled(7, false);
+  final AddAntrianService _antrianService = AddAntrianService();
+  final JadwalLiburAntrian _jadwalLiburAntrian = JadwalLiburAntrian();
+  final AntrianFull _antrianFull = AntrianFull();
   DatabaseReference? _queueRef;
   late StreamSubscription<DatabaseEvent>? _queueListener;
 
@@ -29,28 +34,41 @@ class _ButtonDateViewState extends State<ButtonDateView> {
   void initState() {
     super.initState();
     initializeDateFormatting('id_ID', null);
-    _checkQueues();
+    _checkQueuesAndHolidays();
     _addQueueListener();
   }
 
-  Future<void> _checkQueues() async {
+  Future<void> _checkQueuesAndHolidays() async {
     DateTime currentDate = DateTime.now();
+    bool dataFullyFetched = true;
+
     for (int i = 0; i < 7; i++) {
       DateTime date = currentDate.add(Duration(days: i));
-      bool isFull =
-          await _antrianService.isQueueFull(widget.doctor['key'], date);
+      bool isFull = await _antrianFull.isQueueFull(widget.doctor['key'], date);
+      bool isHoliday = await _jadwalLiburAntrian.isDoctorOnHoliday(
+          widget.doctor['key'], date);
+
       if (mounted) {
         setState(() {
           _isQueueFull[i] = isFull;
+          _isDoctorHoliday[i] = isHoliday;
         });
       }
+
+      if (isFull == null || isHoliday == null) {
+        dataFullyFetched = false;
+      }
+    }
+
+    if (!dataFullyFetched) {
+      Future.delayed(Duration(seconds: 1), _checkQueuesAndHolidays);
     }
   }
 
   void _addQueueListener() {
     _queueRef = FirebaseDatabase.instance.ref().child('antrians');
     _queueListener = _queueRef?.onValue.listen((event) {
-      _checkQueues();
+      _checkQueuesAndHolidays();
     });
   }
 
@@ -77,6 +95,10 @@ class _ButtonDateViewState extends State<ButtonDateView> {
               String formattedDay = DateFormat.EEEE('id_ID').format(date);
               formattedDay = formattedDay.substring(0, 3);
               String formattedDate = DateFormat('dd').format(date);
+              bool isHoliday = _isDoctorHoliday[index];
+              bool isQueueFull = _isQueueFull[index];
+              bool isUnavailable = isQueueFull || isHoliday;
+
               return Container(
                 margin: EdgeInsets.symmetric(horizontal: w * 0.04),
                 width: w * 0.19,
@@ -88,11 +110,13 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                       Text(
                         formattedDate,
                         style: TextStyle(
-                          color: _isQueueFull[index]
-                              ? Colors.white
-                              : _currentIndex == index
+                          color: isHoliday
+                              ? Colors.red
+                              : (isQueueFull
                                   ? Colors.white
-                                  : Colors.black,
+                                  : (_currentIndex == index
+                                      ? Colors.white
+                                      : Colors.black)),
                           fontSize: w * 0.045,
                           fontWeight: FontWeight.bold,
                         ),
@@ -100,18 +124,20 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                       Text(
                         formattedDay,
                         style: TextStyle(
-                          color: _isQueueFull[index]
-                              ? Colors.white
-                              : _currentIndex == index
+                          color: isHoliday
+                              ? Colors.red.withOpacity(0.7)
+                              : (isQueueFull
                                   ? Colors.white
-                                  : Colors.black.withOpacity(0.4),
+                                  : (_currentIndex == index
+                                      ? Colors.white
+                                      : Colors.black.withOpacity(0.4))),
                           fontSize: w * 0.04,
                           fontWeight: FontWeight.normal,
                         ),
                       ),
                     ],
                   ),
-                  onPressed: _isQueueFull[index]
+                  onPressed: isUnavailable
                       ? null
                       : () {
                           setState(() {
@@ -128,7 +154,8 @@ class _ButtonDateViewState extends State<ButtonDateView> {
                     ),
                     backgroundColor: MaterialStateProperty.resolveWith<Color>(
                       (Set<MaterialState> states) {
-                        if (_isQueueFull[index]) return CustomTheme.greyColor;
+                        if (isHoliday) return Colors.white;
+                        if (isQueueFull) return CustomTheme.greyColor;
                         if (_currentIndex == index)
                           return CustomTheme.blueColor1;
                         return Colors.white;

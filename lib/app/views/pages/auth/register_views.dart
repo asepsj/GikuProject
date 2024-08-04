@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/auth/authServices.dart';
+import 'package:giku/app/services/auth/login_services.dart';
+import 'package:giku/app/services/auth/register_services.dart';
 import 'package:giku/app/views/components/button_component.dart';
 import 'package:giku/app/views/components/input_component.dart';
 import 'package:giku/app/views/components/input_password_component.dart';
@@ -25,7 +26,8 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
-    final _authService = AuthService();
+    // final _authService = AuthService();
+    final _register = Register();
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -113,7 +115,7 @@ class _RegisterViewState extends State<RegisterView> {
                       text: "Daftar",
                       textColor: Colors.white,
                       onClicked: () {
-                        _authService.register(
+                        _register.register(
                           context,
                           _nameController.text,
                           _emailController.text,

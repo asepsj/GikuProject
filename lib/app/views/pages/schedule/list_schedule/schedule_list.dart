@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/antrian/antrian_services.dart';
+import 'package:giku/app/services/antrian/add_antrian.dart';
+import 'package:giku/app/views/pages/schedule/detail_schedule/detai_schedule.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 
 class ScheduleList extends StatelessWidget {
@@ -10,6 +11,7 @@ class ScheduleList extends StatelessWidget {
   final String status;
   // final String queueId;
   final Function onCancel;
+  final VoidCallback detail;
 
   const ScheduleList({
     Key? key,
@@ -18,6 +20,7 @@ class ScheduleList extends StatelessWidget {
     required this.text2,
     required this.status,
     // required this.queueId,
+    required this.detail,
     required this.onCancel,
   }) : super(key: key);
 
@@ -39,7 +42,7 @@ class ScheduleList extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: () {},
+        onTap: detail,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(w * 0.035),

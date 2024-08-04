@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:giku/app/services/antrian/antrian_services.dart';
+import 'package:giku/app/services/antrian/batalkan_antrian.dart';
+import 'package:giku/app/services/antrian/user_antrian.dart';
+import 'package:giku/app/views/pages/schedule/detail_schedule/detai_schedule.dart';
 import 'package:giku/app/views/pages/schedule/list_schedule/schedule_list.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class MyScheduleView extends StatefulWidget {
   const MyScheduleView({Key? key}) : super(key: key);
@@ -15,7 +19,8 @@ class MyScheduleView extends StatefulWidget {
 
 class _MyScheduleViewState extends State<MyScheduleView>
     with SingleTickerProviderStateMixin {
-  final AntrianService _antrianService = AntrianService();
+  final UserAntrian _antrianUser = UserAntrian();
+  final AntrianBatal _antrianBatal = AntrianBatal();
   List<Map<dynamic, dynamic>> _queues = [];
   List<Map<dynamic, dynamic>> _queuesDone = [];
   final _tabs = [
@@ -24,9 +29,11 @@ class _MyScheduleViewState extends State<MyScheduleView>
   ];
   late TabController _tabController;
   final _selectedColor = Colors.black;
-  final _unselectedColor = Color(0xff5f6368);
+  final _unselectedColor = const Color(0xff5f6368);
   String? userUid;
   bool isLoading = true;
+  StreamSubscription<DatabaseEvent>? _queuesSubscription;
+  StreamSubscription<DatabaseEvent>? _queuesDoneSubscription;
 
   @override
   void initState() {
@@ -38,14 +45,15 @@ class _MyScheduleViewState extends State<MyScheduleView>
   @override
   void dispose() {
     _tabController.dispose();
+    _queuesSubscription?.cancel();
+    _queuesDoneSubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _initializeData() async {
     await _initializeUserUid();
-    await _fetchUserQueues();
-    await _fetchUserDoneQueues();
-    isLoading = false;
+    await _subscribeToQueues();
+    await _subscribeToDoneQueues();
   }
 
   Future<void> _initializeUserUid() async {
@@ -53,38 +61,53 @@ class _MyScheduleViewState extends State<MyScheduleView>
     if (user != null) {
       setState(() {
         userUid = user.uid;
+        isLoading = false;
       });
     }
   }
 
-  Future<void> _fetchUserQueues() async {
+  Future<void> _subscribeToQueues() async {
     if (userUid != null) {
-      List<Map<dynamic, dynamic>> queues =
-          await _antrianService.fetchUserQueues(userUid!);
-      if (mounted) {
-        setState(() {
-          _queues = queues;
-        });
-      }
+      _queuesSubscription =
+          _antrianUser.userQueuesStream(userUid!).listen((event) {
+        final List<Map<dynamic, dynamic>> queues = event.snapshot.children
+            .where((e) =>
+                e.child('status').value == 'dibuat' ||
+                e.child('status').value == 'berlangsung')
+            .map((e) => {'id': e.key, ...e.value as Map<dynamic, dynamic>})
+            .toList();
+        if (mounted) {
+          setState(() {
+            _queues = queues;
+            isLoading = false;
+          });
+        }
+      });
     }
   }
 
-  Future<void> _fetchUserDoneQueues() async {
+  Future<void> _subscribeToDoneQueues() async {
     if (userUid != null) {
-      List<Map<dynamic, dynamic>> queues =
-          await _antrianService.fetchUserDoneQueues(userUid!);
-      if (mounted) {
-        setState(() {
-          _queuesDone = queues;
-        });
-      }
+      _queuesDoneSubscription =
+          _antrianUser.userQueuesStream(userUid!).listen((event) {
+        final List<Map<dynamic, dynamic>> queues = event.snapshot.children
+            .where((e) =>
+                e.child('status').value == 'batal' ||
+                e.child('status').value == 'selesai')
+            .map((e) => {'id': e.key, ...e.value as Map<dynamic, dynamic>})
+            .toList();
+        if (mounted) {
+          setState(() {
+            _queuesDone = queues;
+            isLoading = false;
+          });
+        }
+      });
     }
   }
 
   Future<void> _cancelQueue(String queueId) async {
-    await _antrianService.cancelQueue(queueId);
-    await _fetchUserQueues();
-    await _fetchUserDoneQueues();
+    await _antrianBatal.cancelQueue(context, queueId);
   }
 
   @override
@@ -152,7 +175,7 @@ class _MyScheduleViewState extends State<MyScheduleView>
                       children: [
                         Center(
                           child: _queues.isEmpty
-                              ? Center(
+                              ? const Center(
                                   child: Text('Tidak ada antrian tersedia'),
                                 )
                               : ListView.builder(
@@ -168,9 +191,18 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                         text2: antrian['date'] ??
                                             'Tidak diketahui',
                                         status: antrian['status'],
-                                        // queueId: antrian['id'],
                                         onCancel: () =>
                                             _cancelQueue(antrian['id']),
+                                        detail: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  DetailAntrian(
+                                                      queueId: antrian['id']),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     );
                                   },
@@ -178,7 +210,7 @@ class _MyScheduleViewState extends State<MyScheduleView>
                         ),
                         Center(
                           child: _queuesDone.isEmpty
-                              ? Center(
+                              ? const Center(
                                   child: Text('Tidak ada antrian tersedia'),
                                 )
                               : ListView.builder(
@@ -188,13 +220,23 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                     return Container(
                                       padding: EdgeInsets.all(w * 0.02),
                                       child: ScheduleList(
+                                        detail: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  DetailAntrian(
+                                                queueId: antrianDone['id'],
+                                              ),
+                                            ),
+                                          );
+                                        },
                                         imagePath: "imagePath",
                                         text1:
                                             "${antrianDone['doctor_name']}" ??
                                                 '',
                                         text2: antrianDone['date'] ?? '',
                                         status: antrianDone['status'],
-                                        // queueId: antrianDone['id'],
                                         onCancel: () =>
                                             _cancelQueue(antrianDone['id']),
                                       ),

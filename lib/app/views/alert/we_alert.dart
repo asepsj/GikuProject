@@ -7,7 +7,7 @@ import 'package:giku/main.dart';
 class WeAlert {
   static showLoading() async {
     return showDialog(
-      context: navigatorKey.currentState!.context,
+      context: MyApp.navigatorKey.currentState!.context,
       barrierDismissible: false,
       builder: (context) {
         final w = MediaQuery.of(context).size.width;
@@ -34,63 +34,50 @@ class WeAlert {
 
   static error({String? description}) {
     showDialog(
-      context: navigatorKey.currentState!.context,
+      context: MyApp.navigatorKey.currentState!.context,
       barrierDismissible: true,
       builder: (context) {
         final w = MediaQuery.of(context).size.width;
         return AlertDialog(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
-          contentPadding: EdgeInsets.zero,
-          content: Center(
-            child: Container(
-              height: w * 0.7,
-              width: w * 0.75,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: CustomTheme.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(w * 0.05)),
+          ),
+          title: Column(
+            children: [
+              Icon(
+                Icons.assignment_late_sharp,
+                size: w * 0.2,
+                color: CustomTheme.redColor,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: w * 0.15,
-                    child: Image.asset('assets/allert/error.png'),
-                  ),
-                  Text(
-                    "Gagal",
-                    style: TextStyle(
-                      color: CustomTheme.redColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: w * 0.08,
-                    ),
-                  ),
-                  SizedBox(height: w * 0.05),
-                  Container(
-                    width: w * 0.55,
-                    child: Text(
-                      description ?? "",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: w * 0.04,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: w * 0.06),
-                  CustomButton(
-                    buttonColor: CustomTheme.redColor,
-                    title: "Oke",
-                    onTap: () {
-                      close();
-                    },
-                  ),
-                ],
+              Text(
+                "Gagal !!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: CustomTheme.redColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: w * 0.08,
+                ),
               ),
+            ],
+          ),
+          content: Text(
+            description ?? "",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: w * 0.04,
             ),
           ),
+          actions: <Widget>[
+            CustomButton(
+              buttonColor: CustomTheme.redColor,
+              title: "Ya",
+              onTap: () {
+                close();
+              },
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
         );
       },
     );
@@ -98,68 +85,54 @@ class WeAlert {
 
   static success({String? description, VoidCallback? onTap}) {
     return showDialog(
-      context: navigatorKey.currentState!.context,
+      context: MyApp.navigatorKey.currentState!.context,
       barrierDismissible: true,
       builder: (context) {
         final w = MediaQuery.of(context).size.width;
         return AlertDialog(
-          icon: Icon(Icons.access_alarm),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
-          contentPadding: EdgeInsets.zero,
-          content: Center(
-            child: Container(
-              height: w * 0.7,
-              width: w * 0.75,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: CustomTheme.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(w * 0.05)),
+          ),
+          title: Column(
+            children: [
+              Icon(
+                Icons.check_circle,
+                size: w * 0.2,
+                color: CustomTheme.successColor,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: w * 0.15,
-                    child: Image.asset('assets/allert/success.png'),
-                  ),
-                  Text(
-                    "Berhasil",
-                    style: TextStyle(
-                      color: CustomTheme.successColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: w * 0.08,
-                    ),
-                  ),
-                  SizedBox(height: w * 0.05),
-                  Container(
-                    width: w * 0.55,
-                    child: Text(
-                      description ?? "",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: w * 0.04,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: w * 0.06),
-                  CustomButton(
-                    buttonColor: CustomTheme.successColor,
-                    title: "Oke",
-                    onTap: onTap,
-                  ),
-                ],
+              Text(
+                "Berhasil",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: CustomTheme.successColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: w * 0.08,
+                ),
               ),
+            ],
+          ),
+          content: Text(
+            description ?? "",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: w * 0.04,
             ),
           ),
+          actions: <Widget>[
+            CustomButton(
+              buttonColor: CustomTheme.successColor,
+              title: "Ya",
+              onTap: onTap,
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
         );
       },
     );
   }
 
   static close() {
-    navigatorKey.currentState!.pop();
+    MyApp.navigatorKey.currentState!.pop();
   }
 }

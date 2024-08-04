@@ -73,6 +73,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         'profileImageUrl': _profileImageUrl,
       });
       await user.updateDisplayName(_nameController.text);
+      await user.updatePhotoURL(_profileImageUrl);
       WeAlert.close();
       WeAlert.success(
         description: 'Berhasil mengupdate profile',
@@ -90,14 +91,23 @@ class _EditProfileViewState extends State<EditProfileView> {
       WeAlert.showLoading();
       try {
         String fileName = DateTime.now().toIso8601String();
-        Reference storageRef = _storage.ref().child('profile_images/$fileName');
+        Reference storageRef =
+            _storage.ref().child('profile_pasiens_images/$fileName');
         await storageRef.putFile(imageFile);
         String imageUrl = await storageRef.getDownloadURL();
 
-        setState(() {
-          _profileImageUrl = imageUrl;
-          WeAlert.close();
-        });
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          DatabaseReference userRef =
+              _databaseReference.child('pasiens/${user.uid}');
+          await userRef.update({'profileImageUrl': imageUrl});
+          await user.updatePhotoURL(imageUrl);
+          setState(() {
+            _profileImageUrl = imageUrl;
+          });
+        }
+
+        WeAlert.close();
       } catch (e) {
         WeAlert.close();
         print("Error uploading image: $e");
@@ -114,7 +124,6 @@ class _EditProfileViewState extends State<EditProfileView> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
     return isLoading
         ? Center(
             child: AlertDialog(

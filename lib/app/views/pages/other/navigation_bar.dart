@@ -4,6 +4,7 @@ import 'package:giku/app/views/pages/home/home.dart';
 import 'package:giku/app/views/pages/profile/my_profile/my_profile.dart';
 import 'package:giku/app/views/pages/schedule/my_shedule/my_schedule.dart';
 import 'package:giku/app/views/pages/notification/notification.dart';
+import 'package:giku/app/services/notification/notification_services.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -15,12 +16,37 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final TextEditingController _searchController = TextEditingController();
   int _currentPage = 0;
+  int _unreadNotifications = 0;
+  final NotificationService _notificationService = NotificationService();
+
   final routes = {
     '/HomePage': (BuildContext context) => HomeView(),
     '/SchedulePage': (BuildContext context) => MyScheduleView(),
     '/NotifPage': (BuildContext context) => NotificationView(),
     '/ProfilePage': (BuildContext context) => MyProfileView(),
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToNotifications();
+  }
+
+  void _listenToNotifications() {
+    _notificationService.fetchNotifications(
+      (notifications) {
+        setState(() {
+          _unreadNotifications = notifications.where((n) => !n['read']).length;
+        });
+      },
+      () {
+        setState(() {
+          _unreadNotifications = 0;
+        });
+      },
+    );
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _currentPage = index;
@@ -70,13 +96,67 @@ class _MainPageState extends State<MainPage> {
             label: '',
           ),
           BottomNavigationBarItem(
-            activeIcon: Icon(
-              Icons.notifications,
-              color: CustomTheme.blueColor1,
+            activeIcon: Stack(
+              children: [
+                Icon(
+                  Icons.notifications,
+                  color: CustomTheme.blueColor1,
+                ),
+                if (_unreadNotifications > 0)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(1),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(w * 0.05),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: w * 0.03,
+                        minHeight: w * 0.03,
+                      ),
+                      child: Text(
+                        '$_unreadNotifications',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.02,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            icon: Icon(
-              Icons.notifications,
-              color: Colors.black,
+            icon: Stack(
+              children: [
+                Icon(
+                  Icons.notifications,
+                  color: Colors.black,
+                ),
+                if (_unreadNotifications > 0)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(1),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(w * 0.05),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: w * 0.03,
+                        minHeight: w * 0.03,
+                      ),
+                      child: Text(
+                        '$_unreadNotifications',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.02,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             label: '',
           ),
@@ -94,5 +174,11 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _notificationService.cancelSubscription();
+    super.dispose();
   }
 }

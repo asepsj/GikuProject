@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:giku/app/views/alert/we_alert.dart';
-import 'package:giku/app/views/pages/doctor/detail_doctor/dokter_detail.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
+import 'package:giku/app/views/pages/doctor/detail_doctor/dokter_detail.dart';
 import 'package:giku/app/views/pages/doctor/list_doctor/doctorlist.dart';
 
 class HomeView extends StatefulWidget {
@@ -24,6 +23,7 @@ class _HomeViewState extends State<HomeView> {
   List<Map<dynamic, dynamic>> _doctorList = [];
   String? displayName;
   bool isLoading = true;
+  String? profileImageUrl;
 
   @override
   void initState() {
@@ -50,9 +50,10 @@ class _HomeViewState extends State<HomeView> {
             _doctorList = data.entries.map((e) {
               final Map<dynamic, dynamic> doctor = e.value;
               doctor['key'] = e.key;
+              displayName = FirebaseAuth.instance.currentUser!.displayName;
+              profileImageUrl = FirebaseAuth.instance.currentUser!.photoURL;
               return doctor;
             }).toList();
-            displayName = FirebaseAuth.instance.currentUser!.displayName;
             isLoading = false;
           });
         }
@@ -61,6 +62,7 @@ class _HomeViewState extends State<HomeView> {
           setState(() {
             _doctorList = [];
             displayName = FirebaseAuth.instance.currentUser!.displayName;
+            profileImageUrl = FirebaseAuth.instance.currentUser!.photoURL;
             isLoading = false;
           });
         }
@@ -100,79 +102,219 @@ class _HomeViewState extends State<HomeView> {
             onRefresh: _refresh,
             child: Scaffold(
               appBar: AppBar(
-                backgroundColor: CustomTheme.blueColor1,
-                systemOverlayStyle: SystemUiOverlayStyle.light,
+                systemOverlayStyle: SystemUiOverlayStyle.dark,
+                title: Row(
+                  children: [
+                    Container(
+                      width: w * 0.1,
+                      height: w * 0.1,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(w * 0.1),
+                        color: CustomTheme.greyColor,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(w * 0.1),
+                        child: profileImageUrl != null
+                            ? Image.network(
+                                profileImageUrl!,
+                                fit: BoxFit.cover,
+                              )
+                            : Icon(
+                                Icons.account_circle,
+                                size: w * 0.1,
+                                color: CustomTheme.blueColor2,
+                              ),
+                      ),
+                    ),
+                    SizedBox(width: w * 0.03),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selamat datang',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: w * 0.03,
+                          ),
+                        ),
+                        Text(
+                          '${displayName ?? ''}',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: w * 0.04,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: Colors.black,
+                      size: w * 0.065,
+                    ),
+                    onPressed: () {
+                      // Handle notification icon tap
+                    },
+                  ),
+                ],
               ),
               body: ListView(
                 children: [
                   Column(
                     children: [
-                      Container(
-                        width: w,
-                        height: w * 0.4,
-                        padding: EdgeInsets.only(left: w * 0.05),
-                        decoration: BoxDecoration(
-                          color: CustomTheme.blueColor1,
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(w * 0.08),
-                            bottomRight: Radius.circular(w * 0.08),
+                      SizedBox(
+                        height: w * 0.05,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+                        child: Container(
+                          width: w,
+                          height: w * 0.4,
+                          decoration: BoxDecoration(
+                            color: CustomTheme.blueColor1,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(w * 0.08),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.all(w * 0.05),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Ayo jaga',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.06,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      Text(
+                                        'kebersihan',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.06,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      Text(
+                                        'gigimu!!',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.06,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.only(right: w * 0.05),
+                                  child: Image.asset(
+                                    'assets/other/home_image.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
+
+                      SizedBox(height: w * 0.05),
+                      // Clinic Image Section
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: w * 0.05),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              child: Text(
-                                'Hi ${displayName?.getFirstName() ?? ''}',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: w * 0.045),
+                            Text(
+                              "Klinik Kami",
+                              style: TextStyle(
+                                fontSize: w * 0.05,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: w * 0.015),
+                            SizedBox(height: w * 0.05),
                             Container(
-                              child: Text(
-                                'Ayo jaga',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: w * 0.1,
-                                    fontWeight: FontWeight.w900),
-                              ),
-                            ),
-                            Container(
-                              child: Text(
-                                'kebersihan gigimu!',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: w * 0.1,
-                                    fontWeight: FontWeight.w900),
+                              height: h * 0.2,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: List.generate(5, (index) {
+                                  return Container(
+                                    width: w * 0.3,
+                                    margin: EdgeInsets.only(right: w * 0.03),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey,
+                                        width: 2.0,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.circular(w * 0.05),
+                                      image: DecorationImage(
+                                        image: AssetImage(
+                                            'assets/other/clinic_image${index + 1}.jpg'),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(
-                        height: w * 0.05,
-                      ),
-                      Column(
-                        children: _doctorList.map((doctor) {
-                          return Padding(
-                            padding: EdgeInsets.all(w * 0.02),
-                            child: DoctorList(
-                              imagePath: 'assets/other/doktor.png',
-                              text1: doctor['displayName'] ?? '',
-                              text2: doctor['email'] ?? '',
-                              ontap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        DokterDetail(doctor: doctor),
+                      SizedBox(height: w * 0.05),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Doctor",
+                              style: TextStyle(
+                                fontSize: w * 0.05,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: w * 0.05),
+                            Column(
+                              children: _doctorList.map((doctor) {
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: w * 0.05),
+                                  child: DoctorList(
+                                    imagePath: 'assets/other/doktor.png',
+                                    text1: doctor['displayName'] ?? '',
+                                    text2: doctor['email'] ?? '',
+                                    ontap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              DokterDetail(doctor: doctor),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 );
-                              },
+                              }).toList(),
                             ),
-                          );
-                        }).toList(),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -180,14 +322,5 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
           );
-  }
-}
-
-extension StringExtension on String? {
-  String getFirstName() {
-    if (this == null) return '';
-    List<String> names = this!.split(' ');
-    if (names.isEmpty) return '';
-    return '${names[0][0].toUpperCase()}${names[0].substring(1)}';
   }
 }

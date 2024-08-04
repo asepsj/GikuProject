@@ -21,8 +21,7 @@ class _MyProfileViewState extends State<MyProfileView> {
   String? displayName;
   bool isLoading = true;
   String? profileImageUrl;
-  late DatabaseReference userRef;
-  late StreamSubscription<DatabaseEvent> _databaseSubscription;
+  late StreamSubscription<DatabaseEvent>? _databaseSubscription;
 
   @override
   void initState() {
@@ -40,23 +39,25 @@ class _MyProfileViewState extends State<MyProfileView> {
         if (mounted) {
           final userData = event.snapshot.value as Map?;
           setState(() {
-            displayName = userData?['displayName'] ?? '';
+            displayName = FirebaseAuth.instance.currentUser!.displayName;
             profileImageUrl = userData?['profileImageUrl'];
             isLoading = false;
           });
         }
-      });
-    } else {
-      setState(() {
-        isLoading = false;
+      }, onError: (error) {
+        if (error is FirebaseException && error.code == 'permission-denied') {
+          print('Permission denied: ${error.message}');
+          setState(() {
+            isLoading = false;
+          });
+        }
       });
     }
   }
 
   @override
   void dispose() {
-    // Stop listening to the database changes
-    _databaseSubscription.cancel();
+    _databaseSubscription?.cancel();
     super.dispose();
   }
 

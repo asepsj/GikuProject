@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/auth/authServices.dart';
+import 'package:giku/app/services/auth/login_google.dart';
+import 'package:giku/app/services/auth/login_services.dart';
 import 'package:giku/app/views/pages/auth/register_views.dart';
 import 'package:giku/app/views/pages/auth/widget/widget_login.dart';
 import 'package:giku/app/views/components/button_component.dart';
@@ -23,6 +24,7 @@ class _LoginViewState extends State<LoginView> {
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
     final _authService = AuthService();
+    final _loginGoogle = LoginGoogle();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
@@ -103,7 +105,9 @@ class _LoginViewState extends State<LoginView> {
                   Container(
                     width: w * 0.305,
                     child: ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          _loginGoogle.loginWithGoogle(context);
+                        },
                         icon: Image.asset(
                           'assets/other/logoGoogle.png',
                           width: w * 0.07,

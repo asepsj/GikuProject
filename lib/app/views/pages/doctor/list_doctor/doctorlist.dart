@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
-import 'package:giku/app/views/pages/doctor/detail_doctor/dokter_detail.dart';
 
 class DoctorList extends StatelessWidget {
   final String imagePath;

@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:giku/app/services/antrian/cek_nomor.dart';
+import 'package:giku/app/services/antrian/jadwal_libur_antrian.dart';
+import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/antrian/antrian_services.dart';
+import 'package:giku/app/services/antrian/add_antrian.dart';
 import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:giku/app/views/components/button_date_schedule.dart';
 import 'package:giku/app/views/components/button_nomor_antrian.dart';
@@ -20,12 +24,16 @@ class AddScheduleView extends StatefulWidget {
 class _AddScheduleViewState extends State<AddScheduleView> {
   DateTime? selectedDate = DateTime.now();
   int? nomorAntrian;
-  final AntrianService antrianService = AntrianService();
+  final AddAntrianService antrianService = AddAntrianService();
+  final CekNomorAntrian cekNomorAntrian = CekNomorAntrian();
+  final JadwalLiburAntrian _jadwalLiburAntrian = JadwalLiburAntrian();
   late StreamSubscription<DatabaseEvent>? _queueListener;
   String? userid;
   String? userName;
   List<bool> isQueueTaken = List.filled(5, false);
   bool isQueueFull = false;
+  bool isHoliday = false;
+  final _firebaseMessaging = FirebaseMessaging.instance;
 
   @override
   void initState() {
@@ -40,12 +48,24 @@ class _AddScheduleViewState extends State<AddScheduleView> {
 
   Future<void> _checkQueueNumbers() async {
     if (selectedDate != null && widget.doctor['key'] != null) {
-      List<bool> queueStatus = await antrianService.checkQueueNumbers(
-          selectedDate!, widget.doctor['key']);
+      // Check if the selected date is a holiday
+      bool isHolidayToday = await _jadwalLiburAntrian.isDoctorOnHoliday(
+          widget.doctor['key'], selectedDate!);
       if (mounted) {
         setState(() {
-          isQueueTaken = queueStatus;
-          isQueueFull = !queueStatus.contains(false);
+          isHoliday = isHolidayToday;
+          if (isHoliday) {
+            isQueueFull = false;
+          } else {
+            cekNomorAntrian
+                .checkQueueNumbers(selectedDate!, widget.doctor['key'])
+                .then((queueStatus) {
+              setState(() {
+                isQueueTaken = queueStatus;
+                isQueueFull = !queueStatus.contains(false);
+              });
+            });
+          }
         });
       }
     }
@@ -62,8 +82,9 @@ class _AddScheduleViewState extends State<AddScheduleView> {
   void addSchedule() async {
     if (selectedDate != null && nomorAntrian != null) {
       bool isQueueAvailable = !isQueueTaken[nomorAntrian! - 1];
+      String? token = await _firebaseMessaging.getToken();
 
-      if (isQueueAvailable) {
+      if (isQueueAvailable && !isHoliday) {
         await antrianService.tambahAntrian(
           context,
           widget.doctor,
@@ -72,6 +93,14 @@ class _AddScheduleViewState extends State<AddScheduleView> {
           userid!,
           userName!,
           widget.doctor['displayName'],
+          token!,
+        );
+      } else if (isHoliday) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Dokter sedang libur pada hari ini. Pilih tanggal atau hari lain.'),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -228,6 +257,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                       setState(() {
                         selectedDate = date;
                         nomorAntrian = null;
+                        isHoliday = false; // Reset holiday status
                       });
                       _checkQueueNumbers();
                     }
@@ -235,7 +265,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.only(top: w * 0.02, left: w * 0.05),
+                padding: EdgeInsets.only(top: w * 0.05, left: w * 0.05),
                 child: Text(
                   'Nomor antrian',
                   style: TextStyle(
@@ -244,13 +274,13 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                   ),
                 ),
               ),
-              isQueueFull
+              isHoliday
                   ? Center(
                       child: Container(
                         width: w * 0.7,
                         padding: EdgeInsets.only(top: w * 0.05),
                         child: Text(
-                          'Pada tanggal dan hari ini nomor antrian sudah penuh, Silahkan pilih tanggal lain.',
+                          'Dokter sedang libur pada hari ini. Pilih tanggal atau hari lain.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: w * 0.045,
@@ -260,21 +290,38 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                         ),
                       ),
                     )
-                  : Center(
-                      child: NomorAntrianView(
-                        onNomorAntrianChanged: _onNomorAntrianChanged,
-                        isQueueTaken: isQueueTaken,
-                      ),
-                    ),
+                  : isQueueFull
+                      ? Center(
+                          child: Container(
+                            width: w * 0.7,
+                            padding: EdgeInsets.only(top: w * 0.05),
+                            child: Text(
+                              'Pada tanggal dan hari ini nomor antrian sudah penuh, Silahkan pilih tanggal lain.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: w * 0.045,
+                                color: CustomTheme.blueColor1,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: NomorAntrianView(
+                            onNomorAntrianChanged: _onNomorAntrianChanged,
+                            isQueueTaken: isQueueTaken,
+                          ),
+                        ),
               Container(
                 alignment: Alignment.bottomCenter,
-                padding: EdgeInsets.only(bottom: w * 0.05, top: w * 0.1),
+                padding: EdgeInsets.only(bottom: w * 0.05, top: w * 0.05),
                 child: ElevatedButton(
-                  onPressed: selectedDate != null && nomorAntrian != null
-                      ? () {
-                          addSchedule();
-                        }
-                      : null,
+                  onPressed:
+                      selectedDate != null && nomorAntrian != null && !isHoliday
+                          ? () {
+                              addSchedule();
+                            }
+                          : null,
                   child: Text(
                     'Tambahkan Jadwal',
                     style: TextStyle(
