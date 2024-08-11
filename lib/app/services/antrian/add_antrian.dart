@@ -15,9 +15,6 @@ class AddAntrianService {
     DateTime date,
     int queueNumber,
     String userUid,
-    String userName,
-    String doctorName,
-    String fcm_token,
   ) async {
     WeAlert.showLoading();
     try {
@@ -26,15 +23,12 @@ class AddAntrianService {
       final now = DateTime.now();
       final dateFormat = DateFormat('yyyy-MM-dd').format(now);
       Map<String, dynamic> queueData = {
-        'doctor_key': doctor['key'],
-        'user_key': userUid,
-        'pasien_name': userName,
-        'doctor_name': doctorName,
+        'doctor_id': doctor['key'],
+        'pasien_id': userUid,
         'nomor_antrian': queueNumber,
         'status': 'dibuat',
         'date': formattedDate,
         'created_at': '${dateFormat}',
-        'fcm_token': fcm_token,
       };
 
       await _databaseReference.child('antrians').child(key).set(queueData);

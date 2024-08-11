@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:giku/app/views/components/input_component.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -108,6 +107,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         }
 
         WeAlert.close();
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
         WeAlert.close();
         print("Error uploading image: $e");
@@ -143,6 +143,12 @@ class _EditProfileViewState extends State<EditProfileView> {
             appBar: AppBar(
               centerTitle: true,
               elevation: 0,
+              shape: ContinuousRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(w * 0.1),
+                  bottomRight: Radius.circular(w * 0.1),
+                ),
+              ),
               iconTheme: IconThemeData(color: Colors.white),
               title: Text(
                 'Edit Profil',
@@ -161,25 +167,56 @@ class _EditProfileViewState extends State<EditProfileView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: w * 0.07),
                     Center(
-                      child: Column(
+                      child: Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundImage: _profileImageUrl != null
-                                ? NetworkImage(_profileImageUrl!)
-                                : AssetImage('assets/other/doktor.png')
-                                    as ImageProvider,
+                          Container(
+                            width: w * 0.3,
+                            height: w * 0.3,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(w * 0.5),
+                              color: CustomTheme.blueColor4,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(w * 0.5),
+                              child: _profileImageUrl != null
+                                  ? Image.network(
+                                      _profileImageUrl!,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Icon(
+                                      Icons.account_circle,
+                                      size: w * 0.3,
+                                      color: CustomTheme.blueColor2,
+                                    ),
+                            ),
                           ),
-                          SizedBox(height: w * 0.03),
-                          ElevatedButton(
-                            onPressed: _pickImage,
-                            child: Text('Ubah Foto'),
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                  CustomTheme.lightGreyColor),
-                              foregroundColor:
-                                  MaterialStateProperty.all(Colors.black),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: _pickImage,
+                              child: Container(
+                                padding: EdgeInsets.all(w * 0.02),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(w * 0.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.edit,
+                                  color: CustomTheme.blueColor1,
+                                  size: w * 0.075,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -192,10 +229,14 @@ class _EditProfileViewState extends State<EditProfileView> {
                           fontSize: w * 0.04, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: w * 0.02),
-                    InputComponent(
+                    TextFormField(
                       controller: _nameController,
-                      hintText: 'Nama lengkap',
-                      labelText: 'Nama Lengkap',
+                      decoration: InputDecoration(
+                        hintText: 'Nama lengkap',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: w * 0.04),
+                      ),
                     ),
                     SizedBox(height: w * 0.03),
                     Text(
@@ -204,10 +245,14 @@ class _EditProfileViewState extends State<EditProfileView> {
                           fontSize: w * 0.04, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: w * 0.02),
-                    InputComponent(
+                    TextFormField(
                       controller: _emailController,
-                      hintText: 'Email',
-                      labelText: 'Email',
+                      decoration: InputDecoration(
+                        hintText: 'Email',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: w * 0.04),
+                      ),
                     ),
                     SizedBox(height: w * 0.03),
                     Text(
@@ -216,10 +261,14 @@ class _EditProfileViewState extends State<EditProfileView> {
                           fontSize: w * 0.04, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: w * 0.02),
-                    InputComponent(
+                    TextFormField(
                       controller: _alamatController,
-                      hintText: 'Alamat',
-                      labelText: 'Alamat',
+                      decoration: InputDecoration(
+                        hintText: 'Alamat',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: w * 0.04),
+                      ),
                     ),
                     SizedBox(height: w * 0.03),
                     Text(
@@ -228,23 +277,27 @@ class _EditProfileViewState extends State<EditProfileView> {
                           fontSize: w * 0.04, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: w * 0.02),
-                    InputComponent(
-                      labelText: 'Nomor HP',
-                      hintText: 'Nomor HP',
+                    TextFormField(
                       controller: _nomorHpController,
+                      decoration: InputDecoration(
+                        hintText: 'Nomor HP',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: w * 0.04),
+                      ),
                     ),
-                    SizedBox(height: w * 0.03),
-                    SizedBox(height: w * 0.05),
-                    ElevatedButton(
-                      onPressed: _updateUserData,
-                      child: Text('Simpan',
+                    SizedBox(height: w * 0.1),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _updateUserData,
+                        child: Text(
+                          'Simpan',
                           style: TextStyle(
-                              color: Colors.black,
-                              fontSize: w * 0.04,
-                              fontWeight: FontWeight.bold)),
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                            CustomTheme.lightGreyColor),
+                            fontSize: w * 0.04,
+                            color: CustomTheme.blueColor1,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],

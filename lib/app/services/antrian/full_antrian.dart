@@ -13,7 +13,7 @@ class AntrianFull {
     if (snapshot.value != null) {
       Map<dynamic, dynamic> queues = snapshot.value as Map<dynamic, dynamic>;
       queues.forEach((key, value) {
-        if (value['doctor_key'] == doctorId &&
+        if (value['doctor_id'] == doctorId &&
             value['date'] == formattedDate &&
             value['status'] != 'batal') {
           count++;

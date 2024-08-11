@@ -5,7 +5,7 @@ class UserAntrian {
   Stream<DatabaseEvent> userQueuesStream(String userId) {
     return _databaseReference
         .child('antrians')
-        .orderByChild('user_key')
+        .orderByChild('pasien_id')
         .equalTo(userId)
         .onValue;
   }

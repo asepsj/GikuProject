@@ -18,7 +18,7 @@ class CekNomorAntrian {
           (value) =>
               value['date'] == formattedDate &&
               value['nomor_antrian'] == nomor &&
-              value['doctor_key'] == doctorId &&
+              value['doctor_id'] == doctorId &&
               value['status'] != 'batal',
         );
         isQueueTaken[i] = isTaken;

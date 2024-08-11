@@ -3,6 +3,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/services/antrian/add_antrian.dart';
 import 'package:giku/app/services/antrian/batalkan_antrian.dart';
 import 'package:giku/app/services/antrian/detail_antrian.dart';
+import 'package:giku/app/services/user/dokter_services.dart';
+import 'package:giku/app/services/user/pasien_services.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -22,28 +24,39 @@ class _DetailAntrianState extends State<DetailAntrian> {
   final AntrianBatal _antrianBatal = AntrianBatal();
   final AddAntrianService _antrianService = AddAntrianService();
   final AntrianDetail _antrianDetail = AntrianDetail();
+  final DokterService _dokterService = DokterService();
+  final PasienService _pasienService = PasienService();
+
   Map<String, dynamic>? _antrian;
+  Map<String, dynamic>? _doctors;
+  Map<String, dynamic>? _patients;
+
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchQueueDetails();
+    _fetchData();
     initializeDateFormatting('id_ID', null);
+  }
+
+  Future<void> _fetchData() async {
+    final antrian = await _antrianDetail.fetchQueueDetails(widget.queueId);
+    final doctors = await _dokterService.getAllDoctors();
+    final patients = await _pasienService.getAllPatients();
+
+    if (mounted) {
+      setState(() {
+        _antrian = antrian;
+        _doctors = doctors;
+        _patients = patients;
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _cancelQueue(String queueId) async {
     await _antrianBatal.cancelQueue(context, queueId);
-  }
-
-  Future<void> _fetchQueueDetails() async {
-    final antrian = await _antrianDetail.fetchQueueDetails(widget.queueId);
-    if (mounted) {
-      setState(() {
-        _antrian = antrian;
-        isLoading = false;
-      });
-    }
   }
 
   String _toTitleCase(String str) {
@@ -84,6 +97,10 @@ class _DetailAntrianState extends State<DetailAntrian> {
     }
 
     bool showCancelButton = _antrian!['status'] == 'dibuat';
+    String patientName = _patients?[_antrian!['pasien_id']]?['displayName'] ??
+        'Name not available';
+    String doctorName = _doctors?[_antrian!['doctor_id']]?['displayName'] ??
+        'Doctor not available';
 
     return Scaffold(
       appBar: AppBar(
@@ -129,7 +146,7 @@ class _DetailAntrianState extends State<DetailAntrian> {
             ),
             SizedBox(height: w * 0.04),
             Text(
-              _toTitleCase(_antrian!['pasien_name'] ?? 'Name not available'),
+              _toTitleCase(patientName),
               style: TextStyle(
                 fontSize: w * 0.06,
                 fontWeight: FontWeight.bold,
@@ -145,7 +162,7 @@ class _DetailAntrianState extends State<DetailAntrian> {
             ),
             SizedBox(height: w * 0.03),
             Text(
-              'Dr. ${_antrian!['doctor_name']}',
+              'Dr. $doctorName',
               style: TextStyle(
                 fontSize: w * 0.04,
                 fontWeight: FontWeight.bold,

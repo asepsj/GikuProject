@@ -91,9 +91,6 @@ class _AddScheduleViewState extends State<AddScheduleView> {
           selectedDate!,
           nomorAntrian!,
           userid!,
-          userName!,
-          widget.doctor['displayName'],
-          token!,
         );
       } else if (isHoliday) {
         ScaffoldMessenger.of(context).showSnackBar(

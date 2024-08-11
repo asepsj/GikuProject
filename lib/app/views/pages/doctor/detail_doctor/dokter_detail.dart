@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:giku/app/services/dokter/jadwal_kerja.dart';
 import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:giku/app/views/pages/schedule/add_schedule/add_shedule.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
@@ -22,18 +23,13 @@ class DokterDetail extends StatefulWidget {
 }
 
 class _DokterDetailState extends State<DokterDetail> {
-  final List<Map<String, String>> schedule = [
-    {'day': 'Senin', 'time': '00.00 - 00.00'},
-    {'day': 'Selasa', 'time': '01.00 - 02.00'},
-    {'day': 'Rabu', 'time': '03.00 - 04.00'},
-    {'day': 'Kamis', 'time': '05.00 - 06.00'},
-    {'day': 'Jumat', 'time': '07.00 - 08.00'},
-  ];
+  List<Map<String, dynamic>> schedule = [];
 
   bool hasActiveQueue = false;
   late DatabaseReference _queueReference;
   bool isLoading = true;
   late StreamSubscription<DatabaseEvent> _queueListener;
+  final JadwalKerja _jadwalKerja = JadwalKerja();
 
   @override
   void initState() {
@@ -44,10 +40,38 @@ class _DokterDetailState extends State<DokterDetail> {
   Future<void> loading() async {
     _initDatabaseReference();
     await _startQueueListener();
+    await fetchDoctorsSchedules();
   }
 
   void _initDatabaseReference() {
     _queueReference = FirebaseDatabase.instance.ref().child('antrians');
+  }
+
+  Future<void> fetchDoctorsSchedules() async {
+    Map<String, Map<String, dynamic>> schedules =
+        await _jadwalKerja.fetchDoctorsSchedules(widget.doctor['key']);
+    setState(() {
+      schedule = schedules.values.toList();
+      _sortScheduleByDay();
+    });
+  }
+
+  void _sortScheduleByDay() {
+    const List<String> daysOrder = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu'
+    ];
+
+    schedule.sort((a, b) {
+      int dayIndexA = daysOrder.indexOf(a['day']);
+      int dayIndexB = daysOrder.indexOf(b['day']);
+      return dayIndexA.compareTo(dayIndexB);
+    });
   }
 
   Future<void> _startQueueListener() async {
@@ -57,7 +81,7 @@ class _DokterDetailState extends State<DokterDetail> {
             event.snapshot.value as Map<dynamic, dynamic>;
         bool isActive = false;
         queues.forEach((key, value) {
-          if (value['user_key'] == FirebaseAuth.instance.currentUser!.uid &&
+          if (value['pasien_id'] == FirebaseAuth.instance.currentUser!.uid &&
               (value['status'] == 'dibuat' ||
                   value['status'] == 'disetujui' ||
                   value['status'] == 'berlangsung')) {
@@ -137,10 +161,17 @@ class _DokterDetailState extends State<DokterDetail> {
                   flexibleSpace: Container(
                     padding: EdgeInsets.only(top: w * 0.19),
                     child: FlexibleSpaceBar(
-                      background: Image(
-                        image: AssetImage('assets/other/doktor.png'),
-                        fit: BoxFit.contain,
-                      ),
+                      background: doctor['foto'] != null
+                          ? Image.network(
+                              doctor['foto']!,
+                              width: w * 0.2,
+                              height: h * 0.2,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.person, size: w * 1);
+                              },
+                            )
+                          : Icon(Icons.person, size: w * 1),
                     ),
                   ),
                 ),
@@ -204,7 +235,8 @@ class _DokterDetailState extends State<DokterDetail> {
                             ),
                             Container(
                               child: ExpandableText(
-                                doctor['key'],
+                                doctor['description'] ??
+                                    'tadak ada deskripsi dokter',
                                 expandText: 'selengkapnya',
                                 collapseText: 'Read Less',
                                 linkColor: CustomTheme.blueColor1,
@@ -227,14 +259,38 @@ class _DokterDetailState extends State<DokterDetail> {
                               ),
                             ),
                             ...schedule.map(
-                              (item) => Container(
-                                child: Text(
-                                  '${item['day']} : ${item['time']}',
-                                  style: TextStyle(
-                                    fontSize: w * 0.035,
-                                    fontWeight: FontWeight.normal,
+                              (item) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${item['day']} : ',
+                                        style: TextStyle(
+                                          fontSize: w * 0.035,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (item['is_holiday'] != true) ...[
+                                        Text(
+                                          '${item['waktu_mulai'] ?? 'Tidak ditentukan'} - ${item['waktu_selesai'] ?? 'Tidak ditentukan'}',
+                                          style: TextStyle(
+                                            fontSize: w * 0.035,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        Text(
+                                          'Libur',
+                                          style: TextStyle(
+                                            fontSize: w * 0.035,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                             SizedBox(height: w * 0.05),

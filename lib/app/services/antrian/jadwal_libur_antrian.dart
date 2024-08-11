@@ -19,7 +19,7 @@ class JadwalLiburAntrian {
 
   Future<bool> isDoctorOnHoliday(String doctorId, DateTime date) async {
     final DatabaseReference scheduleRef =
-        FirebaseDatabase.instance.ref().child('jadwal_kerja').child(doctorId);
+        FirebaseDatabase.instance.ref().child('jam_kerja').child(doctorId);
     final DatabaseReference holidayRef =
         FirebaseDatabase.instance.ref().child('jadwal_libur').child(doctorId);
 

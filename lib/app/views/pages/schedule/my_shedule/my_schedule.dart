@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/services/antrian/batalkan_antrian.dart';
 import 'package:giku/app/services/antrian/user_antrian.dart';
+import 'package:giku/app/services/user/dokter_services.dart';
 import 'package:giku/app/views/pages/schedule/detail_schedule/detai_schedule.dart';
 import 'package:giku/app/views/pages/schedule/list_schedule/schedule_list.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
@@ -34,6 +35,8 @@ class _MyScheduleViewState extends State<MyScheduleView>
   bool isLoading = true;
   StreamSubscription<DatabaseEvent>? _queuesSubscription;
   StreamSubscription<DatabaseEvent>? _queuesDoneSubscription;
+  Map<String, dynamic> _doctorData = {};
+  final DokterService _dokterService = DokterService();
 
   @override
   void initState() {
@@ -52,8 +55,17 @@ class _MyScheduleViewState extends State<MyScheduleView>
 
   Future<void> _initializeData() async {
     await _initializeUserUid();
+    await _fetchDoctorData();
     await _subscribeToQueues();
     await _subscribeToDoneQueues();
+  }
+
+  Future<void> _fetchDoctorData() async {
+    try {
+      _doctorData = await _dokterService.getAllDoctors();
+    } catch (e) {
+      print('Error fetching doctor data: $e');
+    }
   }
 
   Future<void> _initializeUserUid() async {
@@ -61,7 +73,6 @@ class _MyScheduleViewState extends State<MyScheduleView>
     if (user != null) {
       setState(() {
         userUid = user.uid;
-        isLoading = false;
       });
     }
   }
@@ -74,7 +85,15 @@ class _MyScheduleViewState extends State<MyScheduleView>
             .where((e) =>
                 e.child('status').value == 'dibuat' ||
                 e.child('status').value == 'berlangsung')
-            .map((e) => {'id': e.key, ...e.value as Map<dynamic, dynamic>})
+            .map((e) => {
+                  'id': e.key,
+                  ...e.value as Map<dynamic, dynamic>,
+                  'doctor_name': _doctorData[e.child('doctor_id').value]
+                          ?['displayName'] ??
+                      'Tidak diketahui',
+                  'doctor_photo':
+                      _doctorData[e.child('doctor_id').value]?['foto'] ?? ''
+                })
             .toList();
         if (mounted) {
           setState(() {
@@ -94,7 +113,15 @@ class _MyScheduleViewState extends State<MyScheduleView>
             .where((e) =>
                 e.child('status').value == 'batal' ||
                 e.child('status').value == 'selesai')
-            .map((e) => {'id': e.key, ...e.value as Map<dynamic, dynamic>})
+            .map((e) => {
+                  'id': e.key,
+                  ...e.value as Map<dynamic, dynamic>,
+                  'doctor_name': _doctorData[e.child('doctor_id').value]
+                          ?['displayName'] ??
+                      'Tidak diketahui',
+                  'doctor_photo':
+                      _doctorData[e.child('doctor_id').value]?['foto'] ?? ''
+                })
             .toList();
         if (mounted) {
           setState(() {
@@ -182,12 +209,19 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                   itemCount: _queues.length,
                                   itemBuilder: (context, index) {
                                     final antrian = _queues[index];
+                                    final doctorName =
+                                        _doctorData[antrian['doctor_id']]
+                                                ?['displayName'] ??
+                                            'Tidak diketahui';
+                                    final doctorPhoto =
+                                        _doctorData[antrian['doctor_id']]
+                                                ?['foto'] ??
+                                            '';
                                     return Container(
                                       padding: EdgeInsets.all(w * 0.04),
                                       child: ScheduleList(
-                                        imagePath: "imagePath",
-                                        text1: "${antrian['doctor_name']}" ??
-                                            'Tidak diketahui',
+                                        imagePath: doctorPhoto,
+                                        text1: doctorName,
                                         text2: antrian['date'] ??
                                             'Tidak diketahui',
                                         status: antrian['status'],
@@ -217,6 +251,14 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                   itemCount: _queuesDone.length,
                                   itemBuilder: (context, index) {
                                     final antrianDone = _queuesDone[index];
+                                    final doctorName =
+                                        _doctorData[antrianDone['doctor_id']]
+                                                ?['displayName'] ??
+                                            'Tidak diketahui';
+                                    final doctorPhoto =
+                                        _doctorData[antrianDone['doctor_id']]
+                                                ?['foto'] ??
+                                            '';
                                     return Container(
                                       padding: EdgeInsets.all(w * 0.02),
                                       child: ScheduleList(
@@ -231,11 +273,10 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                             ),
                                           );
                                         },
-                                        imagePath: "imagePath",
-                                        text1:
-                                            "${antrianDone['doctor_name']}" ??
-                                                '',
-                                        text2: antrianDone['date'] ?? '',
+                                        imagePath: doctorPhoto,
+                                        text1: doctorName,
+                                        text2: antrianDone['date'] ??
+                                            'Tidak diketahui',
                                         status: antrianDone['status'],
                                         onCancel: () =>
                                             _cancelQueue(antrianDone['id']),

@@ -149,18 +149,6 @@ class _HomeViewState extends State<HomeView> {
                     ),
                   ],
                 ),
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.notifications,
-                      color: Colors.black,
-                      size: w * 0.065,
-                    ),
-                    onPressed: () {
-                      // Handle notification icon tap
-                    },
-                  ),
-                ],
               ),
               body: ListView(
                 children: [
@@ -234,7 +222,6 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ),
                       ),
-
                       SizedBox(height: w * 0.05),
                       // Clinic Image Section
                       Padding(
@@ -297,7 +284,7 @@ class _HomeViewState extends State<HomeView> {
                                 return Padding(
                                   padding: EdgeInsets.only(bottom: w * 0.05),
                                   child: DoctorList(
-                                    imagePath: 'assets/other/doktor.png',
+                                    imagePath: doctor['foto'],
                                     text1: doctor['displayName'] ?? '',
                                     text2: doctor['email'] ?? '',
                                     ontap: () {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 
 class DoctorList extends StatelessWidget {
-  final String imagePath;
+  final String? imagePath;
   final String text1;
   final String text2;
   final VoidCallback ontap;
@@ -72,9 +72,25 @@ class DoctorList extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.only(top: width * 0.025),
+                      // padding: EdgeInsets.only(top: width * 0.025),
                       child: Center(
-                        child: Image.asset('assets/other/doktor.png'),
+                        child: imagePath != null && imagePath!.isNotEmpty
+                            ? Image.network(
+                                imagePath!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.account_circle,
+                                    size: width * 0.15,
+                                    color: Colors.black,
+                                  );
+                                },
+                              )
+                            : Icon(
+                                Icons.account_circle,
+                                size: width * 0.15,
+                                color: Colors.black,
+                              ),
                       ),
                     ),
                   ],

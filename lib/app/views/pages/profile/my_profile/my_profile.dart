@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/services/auth/logout.dart';
 import 'package:giku/app/views/pages/profile/edit_profile/edit_profile.dart';
+import 'package:giku/app/views/pages/profile/pengaturan_katasandi/edit_password.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -149,7 +150,15 @@ class _MyProfileViewState extends State<MyProfileView> {
                                 child: _itemList(
                                   title: 'Update Password',
                                   icon: Icon(MdiIcons.lockOutline),
-                                  page: () {},
+                                  page: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditPasswordView(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               Container(
