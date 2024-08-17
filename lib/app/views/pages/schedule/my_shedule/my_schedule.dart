@@ -6,10 +6,13 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/services/antrian/batalkan_antrian.dart';
 import 'package:giku/app/services/antrian/user_antrian.dart';
 import 'package:giku/app/services/user/dokter_services.dart';
+import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:giku/app/views/pages/schedule/detail_schedule/detai_schedule.dart';
 import 'package:giku/app/views/pages/schedule/list_schedule/schedule_list.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class MyScheduleView extends StatefulWidget {
   const MyScheduleView({Key? key}) : super(key: key);
@@ -42,6 +45,7 @@ class _MyScheduleViewState extends State<MyScheduleView>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    initializeDateFormatting('id_ID', null);
     _initializeData();
   }
 
@@ -58,6 +62,12 @@ class _MyScheduleViewState extends State<MyScheduleView>
     await _fetchDoctorData();
     await _subscribeToQueues();
     await _subscribeToDoneQueues();
+  }
+
+  String _formatDate(String dateStr) {
+    final date = DateTime.parse(dateStr);
+    final formatter = DateFormat('dd MMMM yyyy', 'id_ID');
+    return formatter.format(date);
   }
 
   Future<void> _fetchDoctorData() async {
@@ -134,7 +144,13 @@ class _MyScheduleViewState extends State<MyScheduleView>
   }
 
   Future<void> _cancelQueue(String queueId) async {
-    await _antrianBatal.cancelQueue(context, queueId);
+    await _antrianBatal.cancelQueue(
+      context,
+      queueId,
+      () {
+        WeAlert.close();
+      },
+    );
   }
 
   @override
@@ -222,8 +238,9 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                       child: ScheduleList(
                                         imagePath: doctorPhoto,
                                         text1: doctorName,
-                                        text2: antrian['date'] ??
-                                            'Tidak diketahui',
+                                        text2:
+                                            _formatDate("${antrian['date']}") ??
+                                                'Tidak diketahui',
                                         status: antrian['status'],
                                         onCancel: () =>
                                             _cancelQueue(antrian['id']),
@@ -275,7 +292,8 @@ class _MyScheduleViewState extends State<MyScheduleView>
                                         },
                                         imagePath: doctorPhoto,
                                         text1: doctorName,
-                                        text2: antrianDone['date'] ??
+                                        text2: _formatDate(
+                                                "${antrianDone['date']}") ??
                                             'Tidak diketahui',
                                         status: antrianDone['status'],
                                         onCancel: () =>

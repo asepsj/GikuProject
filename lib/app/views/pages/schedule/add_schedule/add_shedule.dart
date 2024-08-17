@@ -29,18 +29,19 @@ class _AddScheduleViewState extends State<AddScheduleView> {
   final JadwalLiburAntrian _jadwalLiburAntrian = JadwalLiburAntrian();
   late StreamSubscription<DatabaseEvent>? _queueListener;
   String? userid;
-  String? userName;
+  String? namaPasien;
   List<bool> isQueueTaken = List.filled(5, false);
   bool isQueueFull = false;
   bool isHoliday = false;
-  final _firebaseMessaging = FirebaseMessaging.instance;
+  String? imagePath;
+  final TextEditingController _namaPasienController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     setState(() {
       userid = FirebaseAuth.instance.currentUser!.uid;
-      userName = FirebaseAuth.instance.currentUser!.displayName;
+      imagePath = widget.doctor['foto'];
     });
     _addQueueListener();
     _checkQueueNumbers();
@@ -80,9 +81,11 @@ class _AddScheduleViewState extends State<AddScheduleView> {
   }
 
   void addSchedule() async {
-    if (selectedDate != null && nomorAntrian != null) {
+    if (selectedDate != null &&
+        nomorAntrian != null &&
+        namaPasien != null &&
+        namaPasien!.isNotEmpty) {
       bool isQueueAvailable = !isQueueTaken[nomorAntrian! - 1];
-      String? token = await _firebaseMessaging.getToken();
 
       if (isQueueAvailable && !isHoliday) {
         await antrianService.tambahAntrian(
@@ -91,6 +94,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
           selectedDate!,
           nomorAntrian!,
           userid!,
+          namaPasien!,
         );
       } else if (isHoliday) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,6 +130,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
   @override
   void dispose() {
     _queueListener?.cancel();
+    _namaPasienController.dispose();
     super.dispose();
   }
 
@@ -198,7 +203,24 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                           Container(
                             padding: EdgeInsets.only(top: w * 0.025),
                             child: Center(
-                              child: Image.asset('assets/other/doktor.png'),
+                              child: imagePath != null && imagePath!.isNotEmpty
+                                  ? Image.network(
+                                      imagePath!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Icon(
+                                          Icons.account_circle,
+                                          size: w * 0.15,
+                                          color: Colors.black,
+                                        );
+                                      },
+                                    )
+                                  : Icon(
+                                      Icons.account_circle,
+                                      size: w * 0.15,
+                                      color: Colors.black,
+                                    ),
                             ),
                           ),
                         ],
@@ -212,7 +234,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                            'Dr. Jenny Wilson',
+                            'Dr. ${widget.doctor['displayName']}',
                             style: TextStyle(
                               color: Colors.black,
                               fontWeight: FontWeight.w700,
@@ -236,6 +258,32 @@ class _AddScheduleViewState extends State<AddScheduleView> {
               Container(
                 padding: EdgeInsets.only(top: w * 0.05, left: w * 0.05),
                 child: Text(
+                  'Nama Pasien',
+                  style: TextStyle(
+                    fontSize: w * 0.055,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.05, vertical: w * 0.02),
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      namaPasien = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Masukkan nama pasien',
+                  ),
+                ),
+              ),
+              SizedBox(height: w * 0.05),
+              Container(
+                padding: EdgeInsets.only(left: w * 0.05),
+                child: Text(
                   'Tanggal',
                   style: TextStyle(
                     fontSize: w * 0.055,
@@ -254,7 +302,7 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                       setState(() {
                         selectedDate = date;
                         nomorAntrian = null;
-                        isHoliday = false; // Reset holiday status
+                        isHoliday = false;
                       });
                       _checkQueueNumbers();
                     }
@@ -313,12 +361,15 @@ class _AddScheduleViewState extends State<AddScheduleView> {
                 alignment: Alignment.bottomCenter,
                 padding: EdgeInsets.only(bottom: w * 0.05, top: w * 0.05),
                 child: ElevatedButton(
-                  onPressed:
-                      selectedDate != null && nomorAntrian != null && !isHoliday
-                          ? () {
-                              addSchedule();
-                            }
-                          : null,
+                  onPressed: selectedDate != null &&
+                          nomorAntrian != null &&
+                          namaPasien != null &&
+                          namaPasien!.isNotEmpty &&
+                          !isHoliday
+                      ? () {
+                          addSchedule();
+                        }
+                      : null,
                   child: Text(
                     'Tambahkan Jadwal',
                     style: TextStyle(

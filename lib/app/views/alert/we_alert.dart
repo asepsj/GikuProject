@@ -35,7 +35,7 @@ class WeAlert {
   static error({String? description}) {
     showDialog(
       context: MyApp.navigatorKey.currentState!.context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (context) {
         final w = MediaQuery.of(context).size.width;
         return AlertDialog(
@@ -86,7 +86,7 @@ class WeAlert {
   static success({String? description, VoidCallback? onTap}) {
     return showDialog(
       context: MyApp.navigatorKey.currentState!.context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (context) {
         final w = MediaQuery.of(context).size.width;
         return AlertDialog(

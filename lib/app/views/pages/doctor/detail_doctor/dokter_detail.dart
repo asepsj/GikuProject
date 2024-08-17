@@ -53,6 +53,7 @@ class _DokterDetailState extends State<DokterDetail> {
     setState(() {
       schedule = schedules.values.toList();
       _sortScheduleByDay();
+      isLoading = false;
     });
   }
 
@@ -122,10 +123,10 @@ class _DokterDetailState extends State<DokterDetail> {
     final h = MediaQuery.of(context).size.height;
     final doctor = widget.doctor;
     return isLoading
-        ? Center(
-            child: AlertDialog(
+        ? Scaffold(
+            body: AlertDialog(
               elevation: 0,
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white,
               insetPadding: EdgeInsets.zero,
               contentPadding: EdgeInsets.zero,
               content: Center(
@@ -203,7 +204,7 @@ class _DokterDetailState extends State<DokterDetail> {
                           children: [
                             Container(
                               child: Text(
-                                doctor['displayName'] ?? '',
+                                'Dr. ${doctor['displayName']}' ?? '',
                                 style: TextStyle(
                                   fontSize: w * 0.065,
                                   fontWeight: FontWeight.bold,
@@ -212,7 +213,7 @@ class _DokterDetailState extends State<DokterDetail> {
                             ),
                             Container(
                               child: Text(
-                                doctor['email'],
+                                'Dokter Gigi',
                                 style: TextStyle(
                                   fontSize: w * 0.04,
                                   fontWeight: FontWeight.normal,
@@ -305,7 +306,7 @@ class _DokterDetailState extends State<DokterDetail> {
                             ),
                             Container(
                               child: Text(
-                                'dokter.alamat',
+                                '${doctor['alamat']}',
                                 style: TextStyle(
                                   fontSize: w * 0.035,
                                   fontWeight: FontWeight.normal,

@@ -5,7 +5,8 @@ import 'package:giku/app/views/alert/we_alert.dart';
 
 class AntrianBatal {
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
-  Future<void> cancelQueue(BuildContext context, String queueId) async {
+  Future<void> cancelQueue(
+      BuildContext context, String queueId, VoidCallback route) async {
     bool confirm = await ConfirmationDialog.show(
       context,
       'Konfirmasi',
@@ -23,7 +24,7 @@ class AntrianBatal {
         WeAlert.success(
           description: 'Antrian Anda berhasil dibatalkan',
           onTap: () {
-            WeAlert.close();
+            route();
           },
         );
       } catch (e) {

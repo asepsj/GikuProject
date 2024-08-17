@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:giku/app/services/antrian/add_antrian.dart';
 import 'package:giku/app/services/antrian/batalkan_antrian.dart';
 import 'package:giku/app/services/antrian/detail_antrian.dart';
 import 'package:giku/app/services/user/dokter_services.dart';
-import 'package:giku/app/services/user/pasien_services.dart';
+import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -22,14 +21,11 @@ class DetailAntrian extends StatefulWidget {
 
 class _DetailAntrianState extends State<DetailAntrian> {
   final AntrianBatal _antrianBatal = AntrianBatal();
-  final AddAntrianService _antrianService = AddAntrianService();
   final AntrianDetail _antrianDetail = AntrianDetail();
   final DokterService _dokterService = DokterService();
-  final PasienService _pasienService = PasienService();
 
   Map<String, dynamic>? _antrian;
   Map<String, dynamic>? _doctors;
-  Map<String, dynamic>? _patients;
 
   bool isLoading = true;
 
@@ -43,20 +39,25 @@ class _DetailAntrianState extends State<DetailAntrian> {
   Future<void> _fetchData() async {
     final antrian = await _antrianDetail.fetchQueueDetails(widget.queueId);
     final doctors = await _dokterService.getAllDoctors();
-    final patients = await _pasienService.getAllPatients();
 
     if (mounted) {
       setState(() {
         _antrian = antrian;
         _doctors = doctors;
-        _patients = patients;
         isLoading = false;
       });
     }
   }
 
   Future<void> _cancelQueue(String queueId) async {
-    await _antrianBatal.cancelQueue(context, queueId);
+    await _antrianBatal.cancelQueue(
+      context,
+      queueId,
+      () {
+        WeAlert.close();
+        Navigator.pop(context);
+      },
+    );
   }
 
   String _toTitleCase(String str) {
@@ -77,7 +78,7 @@ class _DetailAntrianState extends State<DetailAntrian> {
     final w = MediaQuery.of(context).size.width;
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Color(0xFFB3E5FC),
+        backgroundColor: Colors.white,
         body: Center(
           child: SpinKitCircle(
             color: CustomTheme.blueColor1,
@@ -97,8 +98,6 @@ class _DetailAntrianState extends State<DetailAntrian> {
     }
 
     bool showCancelButton = _antrian!['status'] == 'dibuat';
-    String patientName = _patients?[_antrian!['pasien_id']]?['displayName'] ??
-        'Name not available';
     String doctorName = _doctors?[_antrian!['doctor_id']]?['displayName'] ??
         'Doctor not available';
 
@@ -146,7 +145,7 @@ class _DetailAntrianState extends State<DetailAntrian> {
             ),
             SizedBox(height: w * 0.04),
             Text(
-              _toTitleCase(patientName),
+              _toTitleCase("${_antrian!['name_pasien']}"),
               style: TextStyle(
                 fontSize: w * 0.06,
                 fontWeight: FontWeight.bold,

@@ -8,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:giku/app/services/auth/logout.dart';
 import 'package:giku/app/views/pages/profile/edit_profile/edit_profile.dart';
 import 'package:giku/app/views/pages/profile/pengaturan_katasandi/edit_password.dart';
+import 'package:giku/app/views/pages/profile/pusat_bantuan/pusat_bantuan.dart';
 import 'package:giku/app/views/theme/custom_theme.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -148,7 +149,7 @@ class _MyProfileViewState extends State<MyProfileView> {
                               ),
                               Container(
                                 child: _itemList(
-                                  title: 'Update Password',
+                                  title: 'Perbarui Kata Sandi',
                                   icon: Icon(MdiIcons.lockOutline),
                                   page: () {
                                     Navigator.push(
@@ -165,7 +166,15 @@ class _MyProfileViewState extends State<MyProfileView> {
                                 child: _itemList(
                                   title: 'Pusat bantuan',
                                   icon: Icon(MdiIcons.alertCircleOutline),
-                                  page: () {},
+                                  page: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PusatBantuanView(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               Container(

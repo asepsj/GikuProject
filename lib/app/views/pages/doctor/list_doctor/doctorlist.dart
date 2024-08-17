@@ -72,7 +72,6 @@ class DoctorList extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      // padding: EdgeInsets.only(top: width * 0.025),
                       child: Center(
                         child: imagePath != null && imagePath!.isNotEmpty
                             ? Image.network(
@@ -104,7 +103,7 @@ class DoctorList extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      text1,
+                      'Dr. $text1',
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.w700,
@@ -112,7 +111,7 @@ class DoctorList extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      text2,
+                      'Dokter Gigi',
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
                         fontSize: width * 0.035,

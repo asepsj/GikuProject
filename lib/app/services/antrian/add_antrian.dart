@@ -1,7 +1,5 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:giku/app/services/notification/owesomenotification_services.dart';
 import 'package:giku/app/views/alert/we_alert.dart';
 import 'package:giku/app/views/pages/other/navigation_bar.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +13,7 @@ class AddAntrianService {
     DateTime date,
     int queueNumber,
     String userUid,
+    String name,
   ) async {
     WeAlert.showLoading();
     try {
@@ -29,15 +28,16 @@ class AddAntrianService {
         'status': 'dibuat',
         'date': formattedDate,
         'created_at': '${dateFormat}',
+        'name_pasien': name,
       };
 
       await _databaseReference.child('antrians').child(key).set(queueData);
       print("Antrian berhasil ditambahkan");
-      OwesomeNotificationService.showNotification(
-        title: 'Antrian Ditambahkan',
-        body:
-            'Antrian nomor $queueNumber berhasil ditambahkan untuk tanggal ${DateFormat('dd MMM yyyy').format(date)}.',
-      );
+      // OwesomeNotificationService.showNotification(
+      //   title: 'Antrian Ditambahkan',
+      //   body:
+      //       'Antrian nomor $queueNumber berhasil ditambahkan untuk tanggal ${DateFormat('dd MMM yyyy').format(date)}.',
+      // );
       WeAlert.close();
       WeAlert.success(
           description: 'berhasil menambahkan antrian',

@@ -101,7 +101,7 @@ class _EditPasswordViewState extends State<EditPasswordView> {
         ),
         iconTheme: IconThemeData(color: Colors.white),
         title: Text(
-          'Edit Profil',
+          'Perbarui Kata Sandi',
           style: TextStyle(
             color: Colors.white,
             fontSize: w * 0.045,
