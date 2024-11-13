@@ -25,10 +25,10 @@ class DokterDetail extends StatefulWidget {
 class _DokterDetailState extends State<DokterDetail> {
   List<Map<String, dynamic>> schedule = [];
 
-  bool hasActiveQueue = false;
-  late DatabaseReference _queueReference;
+  // bool hasActiveQueue = false;
+  // late DatabaseReference _queueReference;
   bool isLoading = true;
-  late StreamSubscription<DatabaseEvent> _queueListener;
+  // late StreamSubscription<DatabaseEvent> _queueListener;
   final JadwalKerja _jadwalKerja = JadwalKerja();
 
   @override
@@ -38,14 +38,14 @@ class _DokterDetailState extends State<DokterDetail> {
   }
 
   Future<void> loading() async {
-    _initDatabaseReference();
-    await _startQueueListener();
+    // _initDatabaseReference();
+    // await _startQueueListener();
     await fetchDoctorsSchedules();
   }
 
-  void _initDatabaseReference() {
-    _queueReference = FirebaseDatabase.instance.ref().child('antrians');
-  }
+  // void _initDatabaseReference() {
+  //   _queueReference = FirebaseDatabase.instance.ref().child('antrians');
+  // }
 
   Future<void> fetchDoctorsSchedules() async {
     Map<String, Map<String, dynamic>> schedules =
@@ -75,47 +75,47 @@ class _DokterDetailState extends State<DokterDetail> {
     });
   }
 
-  Future<void> _startQueueListener() async {
-    _queueListener = _queueReference.onValue.listen((event) {
-      if (event.snapshot.value != null) {
-        Map<dynamic, dynamic> queues =
-            event.snapshot.value as Map<dynamic, dynamic>;
-        bool isActive = false;
-        queues.forEach((key, value) {
-          if (value['pasien_id'] == FirebaseAuth.instance.currentUser!.uid &&
-              (value['status'] == 'dibuat' ||
-                  value['status'] == 'disetujui' ||
-                  value['status'] == 'berlangsung')) {
-            isActive = true;
-            isLoading = false;
-          }
-        });
-        if (mounted) {
-          setState(() {
-            hasActiveQueue = isActive;
-            isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            hasActiveQueue = false;
-            isLoading = false;
-          });
-        }
-      }
-    });
-  }
+  // Future<void> _startQueueListener() async {
+  //   _queueListener = _queueReference.onValue.listen((event) {
+  //     if (event.snapshot.value != null) {
+  //       Map<dynamic, dynamic> queues =
+  //           event.snapshot.value as Map<dynamic, dynamic>;
+  //       bool isActive = false;
+  //       queues.forEach((key, value) {
+  //         if (value['pasien_id'] == FirebaseAuth.instance.currentUser!.uid &&
+  //             (value['status'] == 'dibuat' ||
+  //                 value['status'] == 'disetujui' ||
+  //                 value['status'] == 'berlangsung')) {
+  //           isActive = true;
+  //           isLoading = false;
+  //         }
+  //       });
+  //       if (mounted) {
+  //         setState(() {
+  //           hasActiveQueue = isActive;
+  //           isLoading = false;
+  //         });
+  //       }
+  //     } else {
+  //       if (mounted) {
+  //         setState(() {
+  //           hasActiveQueue = false;
+  //           isLoading = false;
+  //         });
+  //       }
+  //     }
+  //   });
+  // }
 
   @override
   void dispose() async {
-    _queueListener.cancel();
+    // _queueListener.cancel();
     super.dispose();
   }
 
-  Future<bool> userHasActiveQueue() async {
-    return hasActiveQueue;
-  }
+  // Future<bool> userHasActiveQueue() async {
+  //   return hasActiveQueue;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -329,25 +329,26 @@ class _DokterDetailState extends State<DokterDetail> {
                   height: w * 0.1,
                   child: ElevatedButton(
                     onPressed: () async {
-                      bool hasActive = await userHasActiveQueue();
-                      if (!hasActive) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AddScheduleView(
-                              doctor: doctor,
-                            ),
+                      // bool hasActive = await userHasActiveQueue();
+                      // if (!hasActive) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddScheduleView(
+                            doctor: doctor,
                           ),
-                        );
-                      } else {
-                        WeAlert.error(
-                            description:
-                                'Anda masih memiliki antrian yang aktif!');
-                      }
+                        ),
+                      );
+                      // } else {
+                      //   WeAlert.error(
+                      //       description:
+                      //           'Anda masih memiliki antrian yang aktif!');
+                      // }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          hasActiveQueue ? Colors.grey : CustomTheme.blueColor1,
+                      // backgroundColor:
+                      //     hasActiveQueue ? Colors.grey : CustomTheme.blueColor1,
+                      backgroundColor: CustomTheme.blueColor1,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(w * 0.05),

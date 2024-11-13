@@ -33,11 +33,6 @@ class AddAntrianService {
 
       await _databaseReference.child('antrians').child(key).set(queueData);
       print("Antrian berhasil ditambahkan");
-      // OwesomeNotificationService.showNotification(
-      //   title: 'Antrian Ditambahkan',
-      //   body:
-      //       'Antrian nomor $queueNumber berhasil ditambahkan untuk tanggal ${DateFormat('dd MMM yyyy').format(date)}.',
-      // );
       WeAlert.close();
       WeAlert.success(
           description: 'berhasil menambahkan antrian',
